@@ -1,0 +1,36 @@
+// rbnf rules for Nilkaus Wirth PL0 language
+
+prog = block \. .
+
+number= SEM_VALUE NUMBER SEM_DONE.
+name= EXCLUDE_ON reserved_words EXCLUDE_OFF.
+reserved_words= const,var,procedure,call,begin,end,if,then,while,do.
+
+unary_oper= odd.
+binary_oper= =, <>, <, >, <=, >= .
+plus_minus= +, - .
+mul_div= *, / .
+
+const_sector= const name = number [ \, name=number] ;.
+var_sector= var name [ \, name] ;.
+proc_sector= procedure name ; block ;.
+
+block = [const_sector!] [var_sector!] [proc_sector] operator.
+
+operator_content= 
+  name SEM_LET := SEM_DONE expression,
+  call SEM_PROC_NAME name SEM_DONE,
+  begin operator [; operator] end,
+  if condition then operator,
+  while condition do operator.
+
+operator= [ operator_content !].
+
+condition= unary_oper expression.
+condition= expression binary_oper expression.
+
+expression= [plus_minus !] term [plus_minus term].
+term= factor [mul_div factor].
+factor= name, number, (expression).
+
+end_of_file

@@ -1,0 +1,100 @@
+//rbnf rules for Niklaus Wirth pascal language
+
+pascal_program= program name ( name [ \, name ] ) ; block \. .
+
+conditions= =, <, >, <>, <=, >=, in.
+mul_div_mod_and= *, /, div, mod, and.
+plus_minus_or= plus_minus, or.
+plus_minus= +,-.
+
+reserved_words= (, ), \[, \], .. , \, , \., ^, :, ;,
+  NUMBER, conditions, mul_div_mod_and, plus_minus_or, nil, not,
+  function, procedure, packed, array, file, of, set, record,
+  begin, end, case, if, then, else, while, do, repeat, until,
+  for, to, downto, with, goto, label, const, type, var,
+  function_name, procedure_name, var_name.
+name= EXCLUDE_ON reserved_words EXCLUDE_OFF.
+
+const_name= name.
+field_name= name.
+var_name= v1,v2,v3,v4,v5,v6,v7,v8,v9,v10.
+type_name= t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,integer,real,boolean.
+function_name= f1,f2,f3,f4,f5,f6,f7,f8,f9,10.
+procedure_name= p1,p2,p3,p4,p5,p6,p7,p8,p9,p10.
+
+int_wo_sign= NUMBER.
+E_or_e= E,e.
+num_real_wo_sign= int_wo_sign [ \. NUMBER !].
+num_wo_sign=  num_real_wo_sign [ E_or_e plus_minus num_real_wo_sign !].
+
+const_wo_sign= num_wo_sign, nil, const_name.
+const_name_or_num_name= const_name, num_wo_sign.
+constant= EMPTY [plus_minus !] const_name_or_num_name.
+
+var_name_or_field_name= var_name, field_name.
+var_structure= \[ expression [ \, expression] \].
+var_structure= \. field_name.
+var_structure= ^ .
+variable= var_name_or_field_name [var_structure].
+
+factor= const_wo_sign, variable.
+factor= function_name [ ( expression [ \, expression] ) !].
+factor= ( expression ).
+factor= not factor.
+factor= \[ [ expression [ .. expression !] EMPTY [ \, expression [ .. expression !] EMPTY ] EMPTY !]  \].
+
+term= factor [ mul_div_mod_and factor].
+
+expression_simple= [plus_minus !] term [plus_minus_or term].
+
+expression= expression_simple [ conditions expression_simple!].
+
+function_or_var= function, var.
+par_list_struct= EMPTY [ function_or_var !] name [ \, name] : type_name, procedure name [ \, name].
+params_list= EMPTY [ ( par_list_struct [ ; par_list_struct ] ) !].
+
+type_simple= type_name, ( name [ \, name ] ) , constant .. constant .
+type_structure= array \[ type_simple [ \, type_simple ] \] of def_type.
+type_structure= file of def_type.
+type_structure= set of type_simple.
+type_structure= record fields_list end.
+def_type= type_simple, ^ type_name, [packed !] type_structure.
+
+fields_struct= EMPTY [ name [ \, name] : def_type !].
+fields_struct_case= constant [ \, constant ] : ( fields_list ).
+fields_list= case name : type_name of [ fields_struct_case ; ].
+fields_list= fields_struct [ ; fields_struct ].
+
+operator= [int_wo_sign : !] [operator_struct !].
+
+var_or_func_name= variable, function_name.
+operator_struct= var_or_func_name := expression.
+
+expression_or_proc_name= procedure_name, expression [ \, expression].
+operator_struct= procedure_name [ ( expression_or_proc_name ) !].
+
+operator_struct= begin operator [ ; operator ] end.
+operator_struct= if expression then operator [ else operator !].
+
+operator_struct_case= constant [ \, constant] : operator.
+operator_struct= case expression of [ operator_struct_case ; ] end.
+
+operator_struct= while expression do operator.
+operator_struct= repeat operator [ ; operator] until expression.
+
+to_or_downto= to, downto.
+operator_struct= for var_name := expression to_or_downto expression do operator.
+
+operator_struct= with expression [ \, expression] do operator.
+operator_struct= goto int_wo_sign.
+
+block= EMPTY
+       [ label int_wo_sign [ \, int_wo_sign] ; !]
+       [ const name = constant ; [name = constant ; ] EMPTY !]
+       [ type name = def_type ; [name = def_type ; ] EMPTY !]
+       [ var name [ \, name] : def_type ; [name [ \, name] : def_type ; ] EMPTY !]
+       [ procedure name params_list ; block ; ]
+       [ function name params_list : type_name ; block ; ]
+       begin operator [ ; operator] end.
+
+end_of_file
